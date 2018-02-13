@@ -23,10 +23,10 @@ public class NoteData {
 	}
 	
 	/**
-	 * Configures the internal information of the Data.
-	 * @param token 
+	 * processes the given string into information.
+	 * @param token string to be processed.
 	 */
-	public void add(String token) {
+	public void process(String token) {
 		for (int i = 0; i < token.length(); i++) {
 			if (Character.isLetter(token.charAt(i))) {
 				characterCount = characterCount + 1;

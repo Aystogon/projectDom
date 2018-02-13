@@ -5,13 +5,13 @@ package gui;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 
-import editor.Command;
 import editor.NotePad;
 import editor.TestStage;
 import javafx.application.*;
 import javafx.event.EventHandler;
 import javafx.stage.Stage;
 import main.AppData;
+import main.Command;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -24,7 +24,6 @@ public class Main extends Application {
 	
 	private FlowPane pane;
 	private Scene scenery;
-	private StringBuilder currentToken;
 	private TextArea area;
 	
 	public Main() {
@@ -45,7 +44,6 @@ public class Main extends Application {
 	public void initComponents(Stage arg) {
 		pane = new FlowPane();
 		scenery = new Scene(pane);
-		currentToken = new StringBuilder();
 		
 		area = initMainProcessorSetup();
 		initMainProcessorHandler(area);
@@ -72,6 +70,11 @@ public class Main extends Application {
 			@Override 
 			public void handle(KeyEvent k) {
 				NotePad.getInstance().processInput(k.getCode().getName());
+				
+				if (NotePad.getInstance().isReady()) {
+					NotePad.getInstance().saveNote(area.getText());
+					//area.appendText(NotePad.getInstance().getCurrentNote());
+				}
 			}
 		});
 	}

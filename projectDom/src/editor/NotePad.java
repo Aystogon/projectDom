@@ -1,5 +1,6 @@
 package editor;
 
+import main.Command;
 import structs.CircularLinkedList;
 
 public class NotePad {
@@ -7,15 +8,19 @@ public class NotePad {
 	private static NotePad instance;
 	private CircularLinkedList<Note> list;
 	private Note currentNote;
+	private Note commandNote;
 	private StringBuilder token;
 	private String regexNumbersMatch;
 	private String regexLettersMatch;
 	private boolean readiedShift;
+	private boolean readiedDocument;
 	
 	/* Deny outside instantiation. */
 	private NotePad() { 
-		currentNote = null;
+		currentNote = new Note();
 		readiedShift = false;
+		readiedDocument = false;
+		commandNote = new Note();
 		token = new StringBuilder();
 		regexNumbersMatch = ".*[0-9].*";
 		regexLettersMatch = ".*[a-zA-Z].*";
@@ -31,56 +36,66 @@ public class NotePad {
 			instance = new NotePad();
 		}
 		return instance;
-		
 	}
 	/**
 	 * Process the given character along with the state of the current token.
-	 * @param charName name of the character~
+	 * @param charName name of the character~ represented by a string.
 	 */
 	public void processInput(String charName) {
 		String curCharName = charName.toLowerCase();
 		if (isWhiteSpace(curCharName)) {
 			if (Command.isCommand(token.toString())) {
 				processCommand(token.toString());
-				System.out.println("a command was executed...");
-				
-			} else {
-				if (currentNote != null) {
-					token.append(getWhitespaceType(curCharName));
-					currentNote.addToken(token.delete(0, token.length()).toString());
-					System.out.println(token.toString());
-				}
+				currentNote.process(token.toString());
 			}
 			token.delete(0, token.length());
 		} else {
-			if (readiedShift && isLetterOrDigit(curCharName) && !curCharName.equals("shift")) {
-				
-				token.append(Character.toUpperCase(curCharName.charAt(0)));
-				readiedShift = false;
-			} else if (curCharName.equals("backspace") && token.length() > 0) {
-				token.deleteCharAt(token.length() - 1);
-			} else if (curCharName.equals("minus")) {
-				token.append('-');
-			} else if (curCharName.equals("shift")) {
-				readiedShift = true;
-			} else if (isLetterOrDigit(curCharName)) {
-				token.append(curCharName);
-			}
+			processNonWhitespaceInput(curCharName);
 		}
 		System.out.println(token.toString());
 	}
+	/**
+	 * Signals the respective command is wanted.
+	 * @param command assumed command pattern.
+	 */
 	public void processCommand(String command) {
 		String curCommand = command.toLowerCase();
-		if (Command.Help.toString().equals(curCommand)) {
-			// TODO conduct help command
-		} else if (Command.Example.toString().equals(curCommand)) {
-			// TODO condut example command
-		} else if (Command.Init.toString().equals(curCommand)) {
-			// TODO conduct init command
+		if (Command.Help.getPattern().equals(curCommand)) {
+			// TODO execute help command
+		} else if (Command.Example.getPattern().equals(curCommand)) {
+			// TODO execute example command
+		} else if (Command.Note.getPattern().equals(curCommand)) {
 			currentNote = new Note();
-			System.out.println("new not was created");
+		} else if (Command.Save.getPattern().equals(curCommand)) {
+			readiedDocument = true; // Signals that notepad is ready to accept input in entirety.
 		}
 	}
+
+	/**
+	 * Process the input for character names that are not associated with 
+	 * whitespace characters. I.g. characters not including whitespace, 
+	 * @param curCharName
+	 */
+	public void processNonWhitespaceInput(String curCharName) {
+		if (readiedShift && isLetterOrDigit(curCharName) && !curCharName.equals("shift")) {
+			token.append(Character.toUpperCase(curCharName.charAt(0)));
+			readiedShift = false;
+		} else if (curCharName.equals("backspace") && token.length() > 0) {
+			token.deleteCharAt(token.length() - 1);
+		} else if (curCharName.equals("minus")) {
+			token.append('-');
+		} else if (curCharName.equals("shift")) {
+			readiedShift = true;
+		} else if (isLetterOrDigit(curCharName)) {
+			token.append(curCharName);
+		}
+	}
+	/**
+	 * returns the appropriate white space character the givens tring
+	 * represents; tab, space, and enter.
+	 * @param charName name of the assumed whitespace character.
+	 * @return null if the given string does not represent a whitespace.
+	 */
 	public Character getWhitespaceType(String charName) {
 		switch(charName) {
 			case "tab": 
@@ -96,7 +111,35 @@ public class NotePad {
 				return '\n';
 			}
 		}
-		return null;
+		return '\0';
+	}
+	/**
+	 * Saves the note written by the user
+	 * @param area
+	 */
+	public void saveNote(String area) {
+		String init = Command.Note.getPattern();
+		String fina = Command.Save.getPattern();
+		int startingIndex = area.toLowerCase().lastIndexOf(init) + init.length();
+		int endingIndex = area.toLowerCase().lastIndexOf(fina);
+		String actual = area.substring(startingIndex, endingIndex);
+		currentNote.setContents(actual);
+		list.add(currentNote);
+		readiedDocument = false;
+	}
+	/**
+	 * Returns the current note the cursor is pointing towards.
+	 * @return the current note the current cursor is pointing towards.
+	 */
+	public String getCurrentNote() {
+		return list.atCursor().getContents();
+	}
+	/**
+	 * Returns true if the document is ready to be retrieved.
+	 * @return true if the document is ready to be retrieved.
+	 */
+	public boolean isReady() {
+		return readiedDocument;
 	}
 	/**
 	 * Determines if the given string represents either a letter or a digit.
