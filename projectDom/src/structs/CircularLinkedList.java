@@ -148,6 +148,13 @@ public class CircularLinkedList<T> {
 		return false;
 	}
 	/**
+	 * Returns true if the list contains no elements
+	 * @return true if the list contains no elements.
+	 */
+	public boolean isEmpty() {
+		return size == 0;
+	}
+	/**
 	 * The size of the linked list.
 	 * @return the size of the linked list.
 	 */

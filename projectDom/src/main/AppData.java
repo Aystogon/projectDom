@@ -21,8 +21,6 @@ public class AppData {
 		windowHeight = ((int)ss.getHeight()/4)*3;
 		currentDirectory = System.getProperty("user.dir");
 		homeDirectory = System.getProperty("user.home");
-		
-		System.out.println(currentDirectory + " " + homeDirectory);
 	}
 	/**
 	 * Returns the single instance of AppData with system information.

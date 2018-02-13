@@ -1,5 +1,9 @@
 package editor;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
+import main.AppData;
 import main.Command;
 import structs.CircularLinkedList;
 
@@ -8,19 +12,21 @@ public class NotePad {
 	private static NotePad instance;
 	private CircularLinkedList<Note> list;
 	private Note currentNote;
-	private Note commandNote;
 	private StringBuilder token;
 	private String regexNumbersMatch;
 	private String regexLettersMatch;
 	private boolean readiedShift;
-	private boolean readiedDocument;
+	private boolean readied;
+	private boolean readiedToSave;
+	private Queue<String> prompts;
 	
 	/* Deny outside instantiation. */
 	private NotePad() { 
-		currentNote = new Note();
+		currentNote = null;
 		readiedShift = false;
-		readiedDocument = false;
-		commandNote = new Note();
+		readiedToSave = false;
+		readied = false;
+		prompts = new LinkedList<String>();
 		token = new StringBuilder();
 		regexNumbersMatch = ".*[0-9].*";
 		regexLettersMatch = ".*[a-zA-Z].*";
@@ -46,13 +52,14 @@ public class NotePad {
 		if (isWhiteSpace(curCharName)) {
 			if (Command.isCommand(token.toString())) {
 				processCommand(token.toString());
-				currentNote.process(token.toString());
+				if (currentNote != null) {
+					currentNote.process(token.toString());
+				}
 			}
 			token.delete(0, token.length());
 		} else {
 			processNonWhitespaceInput(curCharName);
 		}
-		System.out.println(token.toString());
 	}
 	/**
 	 * Signals the respective command is wanted.
@@ -67,14 +74,31 @@ public class NotePad {
 		} else if (Command.Note.getPattern().equals(curCommand)) {
 			currentNote = new Note();
 		} else if (Command.Save.getPattern().equals(curCommand)) {
-			readiedDocument = true; // Signals that notepad is ready to accept input in entirety.
+			readiedToSave = true;
+			readied = true; // Signals that notepad is ready to accept input in entirety.
+		} else if (Command.Next.getPattern().equals(curCommand)) {
+			list.shift();
+			System.out.println(list.atCursor().getContents() + " is at the cursor! " + list.length() + " - " + list.toString());
+		} else if (Command.Path.getPattern().equals(curCommand)) {
+			readied = true;
+			prompts.offer(AppData.getInstance().getCurrentDirectoy());
+		} else if (Command.Current.getPattern().equals(curCommand)) {
+			if (list.isEmpty() || currentNote == null) { return; }
+			readied = true;
+			prompts.offer(list.atCursor().getContents());
+			System.out.println(list.atCursor().getContents());
+		} else if (Command.Delete.getPattern().equals(curCommand)) {
+			if (list.length() == 1) { return; }
+			list.remove();
+		} else if (Command.Paths.getPattern().equals(curCommand)) {
+			// TODO execute the paths command.
 		}
 	}
 
 	/**
 	 * Process the input for character names that are not associated with 
 	 * whitespace characters. I.g. characters not including whitespace, 
-	 * @param curCharName
+	 * @param curCharName string which represents a letter or digit.
 	 */
 	public void processNonWhitespaceInput(String curCharName) {
 		if (readiedShift && isLetterOrDigit(curCharName) && !curCharName.equals("shift")) {
@@ -115,31 +139,61 @@ public class NotePad {
 	}
 	/**
 	 * Saves the note written by the user
-	 * @param area
+	 * @param area note to be saved.
 	 */
 	public void saveNote(String area) {
+		if (!readiedToSave) { return; }
 		String init = Command.Note.getPattern();
 		String fina = Command.Save.getPattern();
 		int startingIndex = area.toLowerCase().lastIndexOf(init) + init.length();
 		int endingIndex = area.toLowerCase().lastIndexOf(fina);
+		
+		if (startingIndex < 0 || endingIndex < 0) { return; }
+		System.out.println(startingIndex + " .... " + endingIndex);
 		String actual = area.substring(startingIndex, endingIndex);
+		if (currentNote == null) { return; }
 		currentNote.setContents(actual);
 		list.add(currentNote);
-		readiedDocument = false;
+		readiedToSave = false;
+	}
+	/**
+	 * Emptys any information about the current state of the Notepad.
+	 * @return Information about the current state of the notepad.
+	 */
+	public String emptyDetailsToUser() {
+		StringBuilder sb = new StringBuilder();
+		while (!prompts.isEmpty()) {
+			String curr = prompts.poll();
+			if (Command.isCommand(curr)) {
+				sb.append("[" + curr + "]");
+			} else  {
+				sb.append("\n" + curr);
+			}
+		}
+		return sb.toString();
 	}
 	/**
 	 * Returns the current note the cursor is pointing towards.
 	 * @return the current note the current cursor is pointing towards.
 	 */
 	public String getCurrentNote() {
-		return list.atCursor().getContents();
+		if (list.length() == 0) {
+			return "";
+		} else {
+			return list.atCursor().getContents();
+		}
 	}
 	/**
 	 * Returns true if the document is ready to be retrieved.
 	 * @return true if the document is ready to be retrieved.
 	 */
 	public boolean isReady() {
-		return readiedDocument;
+		if (readied) {
+			readied = false;
+			return true;
+		} else {
+			return false;
+		}
 	}
 	/**
 	 * Determines if the given string represents either a letter or a digit.

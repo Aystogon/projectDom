@@ -7,6 +7,7 @@ public enum Command {
 	Save("Save", "-save", "Saves the current document to the home."),
 	Delete("Delete", "-delete", "Deletes the current document."),
 	Stats("Status", "-stats", "Shows the current stats of the document."),
+	Path("Path", "-path", "Shows the current path of the output"),
 	New("New", "-new", "Creates a new document, deleting the current one."),
 	Init("Init", "-init", "Initializes a new headered document"),
 	Settings("Settings", "-setting", "Opens up current settings of the notepad.");

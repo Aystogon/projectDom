@@ -5,7 +5,10 @@ public enum Command {
 	Help("help", "-help"," To use a command, type \"-<example>\"."),
 	Example("Example", "-example", " -path , -dele , -init , -fina , -sett, -close..."),
 	Path("Path", "-path", "shows the current path of the processor."),
+	Paths("Path", "-paths", "shows the current elligble direct paths from a directory"),
 	Delete("Delete", "-delete", "removes the current note"),
+	Current("Current", "-current", "Shows that contents at the cursor is pointing towards"),
+	Next("Next", "-next", "shifts the cursor to the next element in the list"),
 	Note("Note", "-note", "Initializes a new txt document"),
 	Save("Save", "-save", "saves the current document"),
 	Close("Close", "-close", "Endss/exits the program."),
@@ -46,14 +49,18 @@ public enum Command {
 	 * @param str String to check
 	 * @return true if the given string is a command pattern.
 	 */
-	public static boolean isCommand(String pattern) {
+	public static boolean isCommand(String pat) {
+		String pattern = pat.toLowerCase();
 		if (pattern.toLowerCase().equals(Command.Delete.pattern) ||
 			pattern.toLowerCase().equals(Command.Settings.pattern) ||
 		    pattern.toLowerCase().equals(Command.Help.pattern) ||
 		    pattern.toLowerCase().equals(Command.Example.pattern) ||
 		    pattern.toLowerCase().equals(Command.Path.pattern) ||
+		    pattern.toLowerCase().equals(Command.Next.pattern) ||
+		    pattern.toLowerCase().equals(Command.Current.pattern) ||
 		    pattern.toLowerCase().equals(Command.Save.pattern) ||
 		    pattern.toLowerCase().equals(Command.Note.pattern)) {
+			System.out.println(pattern + " <<< is the pattern!");
 			return true;
 		} else {
 			return false;

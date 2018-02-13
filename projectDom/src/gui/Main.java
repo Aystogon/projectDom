@@ -58,8 +58,8 @@ public class Main extends Application {
 	
 	public TextArea initMainProcessorSetup() {
 		TextArea ta = new TextArea();
-		ta.setMinSize(data.getWindowWidth(), data.getWindowHeight());
-		ta.setMaxSize(data.getWindowWidth(), data.getWindowHeight());
+		ta.setMinSize(data.getWindowWidth(), data.getWindowHeight() - 25);
+		ta.setMaxSize(data.getWindowWidth(), data.getWindowHeight() - 25);
 		ta.getStylesheets().add("design/contentStyle.css");
 		
 		return ta;
@@ -72,6 +72,7 @@ public class Main extends Application {
 				NotePad.getInstance().processInput(k.getCode().getName());
 				
 				if (NotePad.getInstance().isReady()) {
+					area.appendText(NotePad.getInstance().emptyDetailsToUser());
 					NotePad.getInstance().saveNote(area.getText());
 					//area.appendText(NotePad.getInstance().getCurrentNote());
 				}
