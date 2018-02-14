@@ -5,13 +5,13 @@ package gui;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 
+import editor.Command;
 import editor.NotePad;
 import editor.TestStage;
 import javafx.application.*;
 import javafx.event.EventHandler;
 import javafx.stage.Stage;
 import main.AppData;
-import main.Command;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -69,13 +69,20 @@ public class Main extends Application {
 		area.setOnKeyPressed(new EventHandler<KeyEvent>()	{
 			@Override 
 			public void handle(KeyEvent k) {
+				// get key info
 				NotePad.getInstance().processInput(k.getCode().getName());
 				
+				// Action for prompt.
 				if (NotePad.getInstance().isReady()) {
-					area.appendText(NotePad.getInstance().emptyDetailsToUser());
 					NotePad.getInstance().saveNote(area.getText());
-					//area.appendText(NotePad.getInstance().getCurrentNote());
 				}
+				
+				// message to user.
+				String r = NotePad.getInstance().emptyDetailsToUser();
+				if (!r.isEmpty()) {
+					area.appendText(r);
+				}
+				
 			}
 		});
 	}

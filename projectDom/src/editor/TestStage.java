@@ -7,7 +7,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import main.AppData;
-import main.Command;
 
 public class TestStage extends Stage {
 	
