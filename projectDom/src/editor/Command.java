@@ -6,17 +6,17 @@ public enum Command {
 	Example("Example", "-example", " example commands: -path , -start , -delete , -stop"
 			+ " , -current, -next, -edit, -stop, -save, -close, -settings ..."),
 	Path("Path", "-path", "-path, Shows the current path of the program."),
-	Paths("Path", "-paths", "-paths, shows the current elligble direct paths from a directory"),
+	Files("Files", "-files", "-files, shows the files in the current directory"),
 	Delete("Delete", "-delete", "-delete, Deletes the current element at the cursor."),
 	Current("Current", "-current", "-current, Shows that contents at the cursor."),
 	Next("Next", "-next", "-next, Shifts the cursor to the next element in the list"),
-	Start("Note", "-start", "-start, Starts tracking input for the main component."),
+	Start("Note", "-start", "-start, Starts tracking input for the user"),
 	Edit("Edit", "-edit", "-edit, Gets the current element to be edited."),
-	Stop("Stop", "-stop", "-stop, Stops tracking input from the main component."),
-	Save("Save", "-save", "-save, Saves the contents of the current element at the cursor to a file. \n "
-			+ " It is important that the very next token is a file name with a desired extention \n"
-			+ " there must have been a previously \"stopped\" note loaded into memory already \n"
-			+ " (i.g. to save a java file named main, type: \"-save main.java\""),
+	Stop("Stop", "-stop", "-stop, Stops tracking input from the uset"),
+	Save("Save", "-save", "-save, Saves the contents of the current element at the cursor to a file. "
+			+ "\n It is important that the very next token is a file name with a desired extention"
+			+ "\n there must have been a previously \"stopped\" note loaded into memory already"
+			+ "\n (i.g. to save a java file named main, type: \"-save main.java\""),
 	Close("Close", "-close", "-close, Ends/exits the program."),
 	Settings("Settings", "-settings", "-settings, opens up current settings of the notepad.");
 	
@@ -61,6 +61,7 @@ public enum Command {
 			pattern.toLowerCase().equals(Command.Settings.pattern) ||
 		    pattern.toLowerCase().equals(Command.Help.pattern) ||
 		    pattern.toLowerCase().equals(Command.Example.pattern) ||
+		    pattern.toLowerCase().equals(Command.Files.pattern) ||
 		    pattern.toLowerCase().equals(Command.Path.pattern) ||
 		    pattern.toLowerCase().equals(Command.Next.pattern) ||
 		    pattern.toLowerCase().equals(Command.Current.pattern) ||

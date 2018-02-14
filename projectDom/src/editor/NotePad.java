@@ -21,7 +21,7 @@ public class NotePad {
 	private boolean readiedShift;
 	private boolean isAwaitingParam;
 	private Queue<String> prompts;
-	private Queue<String> commandQueue;
+	private NoteData allNote;
 	
 	/* Deny outside instantiation. */
 	private NotePad() { 
@@ -31,12 +31,13 @@ public class NotePad {
 		isAwaitingParam = false;
 		currentNote = null;
 		readiedShift = false;
-		commandQueue = new LinkedList<String>();
+		allNote = new NoteData();
 		prompts = new LinkedList<String>();
 		token = new StringBuilder();
 		regexNumbersMatch = ".*[0-9].*";
 		regexLettersMatch = ".*[a-zA-Z].*";
 		list = new CircularLinkedList<Note>();
+		allNote.incrementTokenCount();
 	}
 	
 	/**
@@ -54,18 +55,17 @@ public class NotePad {
 	 * @param charName name of the character~ represented by a string.
 	 */
 	public void processInput(String charName) {
-		//System.out.println(AppData.getInstance().getCurrentDirectoy());
 		String curCharName = charName.toLowerCase();
+		allNote.incrementCharacterCount();
 		if (isWhiteSpace(curCharName)) {
 			if (isAwaitingParam && !list.isEmpty()) {
-				new NoteConverter(list.atCursor().getContents(), token.toString());
+				NoteIOHandler.getInstance().writeToFile(list.atCursor().getContents(), token.toString());
 				isAwaitingParam = false;
 			} else if (Command.isCommand(token.toString())) {
 				processCommand(token.toString());
-				if (currentNote != null) {
-					currentNote.process(token.toString());
-				}
-			}
+			} 
+			
+			allNote.incrementTokenCount();
 			token.delete(0, token.length());
 		} else {
 			processNonWhitespaceInput(curCharName);
@@ -99,15 +99,17 @@ public class NotePad {
 		} else if (Command.Save.getPattern().equals(curCommand)) {
 			isAwaitingParam = true;
 		} else if (Command.Path.getPattern().equals(curCommand)) {
-			prompts.offer(AppData.getInstance().getCurrentDirectoy());
+			prompts.offer(NoteIOHandler.getInstance().getCurrentDirectoy());
 		} else if (Command.Current.getPattern().equals(curCommand)) {
-			if (list.isEmpty()) { return; }
+			if (list.isEmpty()) { prompts.offer("Nothing is saved"); return; }
 			prompts.offer(list.atCursor().getContents());
+			prompts.offer(list.atCursor().getStats() + " >> LOCAL");
+			prompts.offer(allNote.toString() + " >> GLOBAL");
 		} else if (Command.Delete.getPattern().equals(curCommand)) {
 			if (list.length() < 1) { return; }
 			list.remove();
-		} else if (Command.Paths.getPattern().equals(curCommand)) {
-			// TODO execute the paths command.
+		} else if (Command.Files.getPattern().equals(curCommand)) {
+			prompts.offer(NoteIOHandler.getInstance().getFilesOfDirectory());
 		} else if (Command.Close.getPattern().equals(curCommand)) {
 			System.exit(0);
 		}
@@ -175,6 +177,7 @@ public class NotePad {
 		
 		if (startingIndex < 0 || endingIndex < 0) { return; }
 		String actual = area.substring(startingIndex, endingIndex);
+		currentNote.process(actual);
 		currentNote.setContents(actual);
 		list.add(currentNote);
 	}
@@ -190,11 +193,12 @@ public class NotePad {
 		
 		if (startingIndex < 0 || endingIndex < 0) { return; }
 		String actual = area.substring(startingIndex, endingIndex);
+		currentNote.process(actual);
 		currentNote.setContents(actual);
 		isEditing = false;
 	}
 	/**
-	 * Emptys any information about the current state of the Notepad.
+	 * Empty any information about the current state of the Notepad.
 	 * @return Information about the current state of the notepad.
 	 */
 	public String emptyDetailsToUser() {
@@ -204,7 +208,7 @@ public class NotePad {
 			if (Command.isCommand(curr)) {
 				sb.append("[" + curr + "]");
 			} else  {
-				sb.append("\n" + curr);
+				sb.append((sb.length() > 0 ? "\n" : "") + curr);
 			}
 		}
 		return sb.toString();

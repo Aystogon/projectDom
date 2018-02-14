@@ -6,7 +6,6 @@ public class NoteData {
 	private int tokenCount;
 	private int maxWPM;
 	private int maxCPM;
-	private int missTypes;
 	
 	private String regexContainsNums;
 	private String regexContainsLets;
@@ -17,7 +16,6 @@ public class NoteData {
 		
 		characterCount = 0;
 		tokenCount = 0;
-		missTypes = 0;
 		maxWPM = 0;
 		maxCPM = 0;
 	}
@@ -26,20 +24,21 @@ public class NoteData {
 	 * processes the given string into information.
 	 * @param token string to be processed.
 	 */
-	public void process(String token) {
-		for (int i = 0; i < token.length(); i++) {
-			if (Character.isLetter(token.charAt(i))) {
-				characterCount = characterCount + 1;
+	public void process(String text) {
+		for (int i = 0; i < text.length(); i++) {
+			characterCount++;
+			if (text.charAt(i) == ' ' || text.charAt(i) == '\t' || text.charAt(i) == '\n') {
+				tokenCount++;
 			}
 		}
-		// A potential miss type from the user.
-		if (token.matches(regexContainsLets) && token.matches(regexContainsNums)) {
-			missTypes = missTypes + 1;
-		}
-		
-		tokenCount = tokenCount + token.length();
+		tokenCount--;
 	}
-	
+	public void incrementCharacterCount() {
+		characterCount++;
+	}
+	public void incrementTokenCount() {
+		tokenCount++;
+	}
 	public int getCharacterCount() {
 		return characterCount;
 	}
@@ -51,5 +50,9 @@ public class NoteData {
 	}
 	public int getCharactersPerMinute() {
 		return maxCPM;
+	}
+	@Override
+	public String toString() {
+		return "\n[Approximate Characters: " + characterCount + "][Approximate Tokens: " + tokenCount + "]";
 	}
 }

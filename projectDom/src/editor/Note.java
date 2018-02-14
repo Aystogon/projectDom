@@ -34,4 +34,7 @@ public class Note {
 	public String getContents() {
 		return contents.toString();
 	}
+	public String getStats() {
+		return data.toString();
+	}
 }

@@ -5,7 +5,6 @@ package gui;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 
-import editor.Command;
 import editor.NotePad;
 import editor.TestStage;
 import javafx.application.*;
