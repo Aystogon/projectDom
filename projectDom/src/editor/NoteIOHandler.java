@@ -32,7 +32,6 @@ public class NoteIOHandler {
 	 * @param fileNameExt name of the file.
 	 */
 	public void writeToFile(String contents, String fileNameExt) {
-		System.out.println(fileNameExt);
 		BufferedWriter bw = null;
 		try {
 			bw = new BufferedWriter(new FileWriter(fileNameExt, false));

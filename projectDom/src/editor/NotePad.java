@@ -2,9 +2,6 @@ package editor;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Stack;
-
-import main.AppData;
 import structs.CircularLinkedList;
 
 public class NotePad {
@@ -13,31 +10,16 @@ public class NotePad {
 	private CircularLinkedList<Note> list;
 	private Note currentNote;
 	private StringBuilder token;
-	private String regexNumbersMatch;
-	private String regexLettersMatch;
-	private boolean isStarted;
-	private boolean isStopped;
-	private boolean isEditing;
-	private boolean readiedShift;
-	private boolean isAwaitingParam;
 	private Queue<String> prompts;
-	private NoteData allNote;
+	private NoteData globalNote;
 	
 	/* Deny outside instantiation. */
-	private NotePad() { 
-		isStarted = false;
-		isStopped = false;
-		isEditing = false;
-		isAwaitingParam = false;
-		currentNote = null;
-		readiedShift = false;
-		allNote = new NoteData();
+	private NotePad() {
+		globalNote = new NoteData();
 		prompts = new LinkedList<String>();
 		token = new StringBuilder();
-		regexNumbersMatch = ".*[0-9].*";
-		regexLettersMatch = ".*[a-zA-Z].*";
 		list = new CircularLinkedList<Note>();
-		allNote.incrementTokenCount();
+		globalNote.incrementTokenCount();
 	}
 	
 	/**
@@ -56,107 +38,26 @@ public class NotePad {
 	 */
 	public void processInput(String charName) {
 		String curCharName = charName.toLowerCase();
-		allNote.incrementCharacterCount();
+		globalNote.incrementCharacterCount();
+		
 		if (isWhiteSpace(curCharName)) {
-			if (isAwaitingParam && !list.isEmpty()) {
+			// Saves the current item to a file.
+			if (Command.Save.isInUse() && !Command.Edit.isInUse() && !list.isEmpty()) {
 				NoteIOHandler.getInstance().writeToFile(list.atCursor().getContents(), token.toString());
-				isAwaitingParam = false;
+				Command.Save.isInUse(false);
+			// Executes a command using the current token.
 			} else if (Command.isCommand(token.toString())) {
-				processCommand(token.toString());
-			} 
-			
-			allNote.incrementTokenCount();
+				if (CommandHandler.processCommand(token.toString(), list, currentNote)) {
+					currentNote = new Note();
+				}
+			}
+			// Clear token for the next token
+			globalNote.incrementTokenCount();
 			token.delete(0, token.length());
 		} else {
-			processNonWhitespaceInput(curCharName);
+			CharProcessor.ProcessCharStringRep(curCharName, token);
 		}
-	}
-	/**
-	 * Signals the respective command is wanted.
-	 * @param command assumed command pattern.
-	 */
-	public void processCommand(String command) {
-		String curCommand = command.toLowerCase();
-		if (Command.Help.getPattern().equals(curCommand)) {
-			prompts.offer(Command.Help.getDescription());
-		} else if (Command.Example.getPattern().equals(curCommand)) {
-			loadCommandsIntoQueue();
-		} else if (Command.Start.getPattern().equals(curCommand)) {
-			if (isStarted || isStopped || isEditing) { return; }
-			isStarted = true;
-			currentNote = new Note();
-		} else if (Command.Stop.getPattern().equals(curCommand)) {
-			if (isStarted == false) { return; }
-			isStopped = true; // notepad is ready for actual text.
-		} else if (Command.Edit.getPattern().equals(curCommand)) {
-			if (isStarted || isStopped || isEditing) { return; }
-			isStarted = true;
-			isEditing = true;
-			currentNote = list.atCursor();
-			prompts.offer(currentNote.getContents());
-		} else if (Command.Next.getPattern().equals(curCommand)) {
-			list.shift();
-		} else if (Command.Save.getPattern().equals(curCommand)) {
-			isAwaitingParam = true;
-		} else if (Command.Path.getPattern().equals(curCommand)) {
-			prompts.offer(NoteIOHandler.getInstance().getCurrentDirectoy());
-		} else if (Command.Current.getPattern().equals(curCommand)) {
-			if (list.isEmpty()) { prompts.offer("Nothing is saved"); return; }
-			prompts.offer(list.atCursor().getContents());
-			prompts.offer(list.atCursor().getStats() + " >> LOCAL");
-			prompts.offer(allNote.toString() + " >> GLOBAL");
-		} else if (Command.Delete.getPattern().equals(curCommand)) {
-			if (list.length() < 1) { return; }
-			list.remove();
-		} else if (Command.Files.getPattern().equals(curCommand)) {
-			prompts.offer(NoteIOHandler.getInstance().getFilesOfDirectory());
-		} else if (Command.Close.getPattern().equals(curCommand)) {
-			System.exit(0);
-		}
-	}
-	/**
-	 * Process the input for character names that are not associated with 
-	 * whitespace characters. I.g. characters not including whitespace, 
-	 * @param curCharName string which represents a letter or digit.
-	 */
-	public void processNonWhitespaceInput(String curCharName) {
-		if (readiedShift && isLetterOrDigit(curCharName) && !curCharName.equals("shift")) {
-			token.append(Character.toUpperCase(curCharName.charAt(0)));
-			readiedShift = false;
-		} else if (curCharName.equals("backspace") && token.length() > 0) {
-			token.deleteCharAt(token.length() - 1);
-		} else if (curCharName.equals("minus")) {
-			token.append('-');
-		} else if (curCharName.equals("period")) {
-			token.append('.');
-		} else if (curCharName.equals("shift")) {
-			readiedShift = true;
-		} else if (isLetterOrDigit(curCharName)) {
-			token.append(curCharName);
-		}
-	}
-	/**
-	 * returns the appropriate white space character the givens tring
-	 * represents; tab, space, and enter.
-	 * @param charName name of the assumed whitespace character.
-	 * @return null if the given string does not represent a whitespace.
-	 */
-	public Character getWhitespaceType(String charName) {
-		switch(charName) {
-			case "tab": 
-			{
-				return '\t';
-			} 
-			case "space":
-			{
-				return ' ';
-			}
-			case "enter":
-			{
-				return '\n';
-			}
-		}
-		return '\0';
+		prompts.offer(CommandHandler.CommandRelease());
 	}
 	/**
 	 * Saves the note written by the user
@@ -165,7 +66,7 @@ public class NotePad {
 	public void saveNote(String area) {
 		if (currentNote == null) { return; }
 		
-		if (isEditing) {
+		if (Command.Edit.isInUse()) {
 			saveEditNote(area);
 			return;
 		}
@@ -191,11 +92,12 @@ public class NotePad {
 		int startingIndex = area.toLowerCase().lastIndexOf(edit) + edit.length();
 		int endingIndex = area.toLowerCase().lastIndexOf(stop);
 		
-		if (startingIndex < 0 || endingIndex < 0) { return; }
+		if (startingIndex < 0 || endingIndex < 0) { Command.Edit.isInUse(false); return; }
 		String actual = area.substring(startingIndex, endingIndex);
+
 		currentNote.process(actual);
 		currentNote.setContents(actual);
-		isEditing = false;
+		Command.Edit.isInUse(false);
 	}
 	/**
 	 * Empty any information about the current state of the Notepad.
@@ -225,34 +127,14 @@ public class NotePad {
 		}
 	}
 	/**
-	 * Adds all the known commands to the queue, for the user.
-	 */
-	private void loadCommandsIntoQueue() {
-		for (int i = 1; i < Command.values().length; i++) {
-			prompts.offer(Command.values()[i].getDescription());
-		}
-	}
-	/**
 	 * Returns true if the document is ready to be retrieved.
 	 * @return true if the document is ready to be retrieved.
 	 */
 	public boolean isReady() {
-		if (isStarted && isStopped) {
-			isStarted = false;
-			isStopped = false;
+		if ((Command.Start.isInUse() || Command.Edit.isInUse()) && Command.Stop.isInUse()) {
+			Command.Start.isInUse(false);
+			Command.Stop.isInUse(false);
 			System.out.println("MAKING A NEW NOTE!");
-			return true;
-		} else {
-			return false;
-		}
-	}
-	/**
-	 * Determines if the given string represents either a letter or a digit.
-	 * @param charName name of the supposed letter or digit.
-	 * @return true if the given string represents a letter or a digit.
-	 */
-	private boolean isLetterOrDigit(String charName) {
-		if (charName.matches(regexLettersMatch) || charName.matches(regexNumbersMatch)) {
 			return true;
 		} else {
 			return false;

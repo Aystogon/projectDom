@@ -1,12 +1,7 @@
 package gui;
 
 
-
-import java.awt.Dimension;
-import java.awt.Toolkit;
-
 import editor.NotePad;
-import editor.TestStage;
 import javafx.application.*;
 import javafx.event.EventHandler;
 import javafx.stage.Stage;
@@ -15,7 +10,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 
 public class Main extends Application {
 
@@ -76,11 +70,9 @@ public class Main extends Application {
 					NotePad.getInstance().saveNote(area.getText());
 				}
 				
-				// message to user.
-				String r = NotePad.getInstance().emptyDetailsToUser();
-				if (!r.isEmpty()) {
-					area.appendText(r);
-				}
+				if (area.getText().length() > 5000) { area.clear(); }
+				
+				area.appendText(NotePad.getInstance().emptyDetailsToUser());
 				
 			}
 		});

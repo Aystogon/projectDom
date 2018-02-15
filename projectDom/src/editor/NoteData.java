@@ -7,13 +7,7 @@ public class NoteData {
 	private int maxWPM;
 	private int maxCPM;
 	
-	private String regexContainsNums;
-	private String regexContainsLets;
-	
 	public NoteData() {
-		regexContainsNums = ".*[0-9].*";
-		regexContainsLets = ".*[a-zA-Z].*";
-		
 		characterCount = 0;
 		tokenCount = 0;
 		maxWPM = 0;
@@ -25,6 +19,7 @@ public class NoteData {
 	 * @param token string to be processed.
 	 */
 	public void process(String text) {
+		reset();
 		for (int i = 0; i < text.length(); i++) {
 			characterCount++;
 			if (text.charAt(i) == ' ' || text.charAt(i) == '\t' || text.charAt(i) == '\n') {
@@ -32,6 +27,12 @@ public class NoteData {
 			}
 		}
 		tokenCount--;
+	}
+	public void reset() {
+		characterCount = 0;
+		tokenCount = 0;
+		maxWPM = 0;
+		maxCPM = 0;
 	}
 	public void incrementCharacterCount() {
 		characterCount++;
