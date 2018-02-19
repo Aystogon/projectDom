@@ -29,11 +29,16 @@ public class AppData {
 		return instance;
 	}
 	
-	
 	public int getWindowWidth() {
 		return windowWidth;
 	}
 	public int getWindowHeight() {
 		return windowHeight;
+	}
+	public void setWindowWidth(int windowWidth) {
+		this.windowWidth = windowWidth;
+	}
+	public void setWindowHeight(int windowHeight) {
+		this.windowHeight = windowHeight;
 	}
 }
